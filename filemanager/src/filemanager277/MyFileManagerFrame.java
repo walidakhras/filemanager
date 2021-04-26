@@ -1,6 +1,8 @@
 package filemanager277;
 
 import javax.swing.*;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
 import javax.swing.tree.DefaultMutableTreeNode;
@@ -19,6 +21,7 @@ import java.util.Arrays;
 
 public class MyFileManagerFrame extends JInternalFrame {
 
+    //test
     JSplitPane splitPane;
     DirPanel dirPanel;
     FilePanel filePanel;
@@ -53,7 +56,6 @@ public class MyFileManagerFrame extends JInternalFrame {
         splitPane.setOneTouchExpandable(true);
         splitPane.setDividerLocation(350);
         this.setTitle(drive);
-
         this.getContentPane().add(splitPane);
         this.setMaximizable(true);
         this.setClosable(true);
@@ -63,8 +65,9 @@ public class MyFileManagerFrame extends JInternalFrame {
     }
 
     public void changeFilePanel(File[] fileList) {
-        this.currentFileArray = fileList;
-        FilePanel newPanel = new FilePanel(fileList);
+        //this.currentFileArray = fileList;
+        //FilePanel newPanel = new FilePanel(currentFileArray);
+        FilePanel newPanel = new FilePanel();
         filePanel.removeAll();
         filePanel.repaint();
         filePanel.revalidate();
@@ -86,7 +89,8 @@ public class MyFileManagerFrame extends JInternalFrame {
     }
 
     public void hideDetailsWhenClicked() {
-        FilePanel newPanel = new FilePanel(currentFileArray);
+        //FilePanel newPanel = new FilePanel(currentFileArray);
+        FilePanel newPanel = new FilePanel();
         newPanel.getFilesArrayNoDetails(currentFileArray);
         filePanel.removeAll();
         filePanel.repaint();
@@ -135,7 +139,7 @@ public class MyFileManagerFrame extends JInternalFrame {
                         DefaultMutableTreeNode treeNode = new DefaultMutableTreeNode(node);
                         rootNode.add(treeNode); } } } }
 
-        private void expandTreeSelection(DefaultMutableTreeNode n, MyFileNode mfn) {
+        private void expandDirectory(DefaultMutableTreeNode n, MyFileNode mfn) {
             if (n == null) return;
             File[] files = mfn.getFile().listFiles();
             if (files == null) return;
@@ -148,7 +152,7 @@ public class MyFileManagerFrame extends JInternalFrame {
                     node.setAllowsChildren(true);
                     n.add(node); } } }
 
-        private ArrayList<String> getSizeAndDate(File[] files) {
+        /*private ArrayList<String> getSizeAndDate(File[] files) {
             assert files != null;
             ArrayList<String> fileAndSize = new ArrayList<String>();
             SimpleDateFormat formatter = new SimpleDateFormat("MM/dd/yyyy");
@@ -161,18 +165,18 @@ public class MyFileManagerFrame extends JInternalFrame {
                 }
             }
             return fileAndSize;
-        }
+        }*/
 
-        private void recurseNodes() {}
 
         class DemoTreeSelectionListener implements TreeSelectionListener {
             @Override
             public void valueChanged(TreeSelectionEvent e) {
                 DefaultMutableTreeNode node = (DefaultMutableTreeNode) dirTree.getLastSelectedPathComponent();
                 MyFileNode mfn = (MyFileNode) node.getUserObject();
-                expandTreeSelection(node, mfn);
+                expandDirectory(node, mfn);
                 System.out.println(Arrays.toString(mfn.getFileList()));
-                System.out.println(getSizeAndDate(mfn.getFileList()));
+                //System.out.println(getSizeAndDate(mfn.getFileList()));
+                currentFileArray = mfn.getFileList();
                 changeFilePanel(mfn.getFileList());
             }}
     }
@@ -183,40 +187,37 @@ public class MyFileManagerFrame extends JInternalFrame {
 
     public class FilePanel extends JPanel {
         private JScrollPane filePanelScrollPane = new JScrollPane();
-        JList<File> jList1;
         JList<String> stringList;
         DefaultListModel<String> model = new DefaultListModel<>();
         ArrayList<String> filePath = new ArrayList<>();
-        File[] currentFileArray;
-        MyFileManagerFrame myfm;
-
+        //File[] currentFileArray;
 
 
         public FilePanel() {
-            this.jList1 = new JList<>();
-            filePanelScrollPane.setViewportView(jList1);
-            this.add(filePanelScrollPane);
-        }
-
-        /*public FilePanel(File[] f) {
-            if (f == null) return;
-            this.jList1 = new JList<>(f);
-            filePanelScrollPane.setViewportView(jList1);
-            this.add(filePanelScrollPane);
-        }*/
-
-        public FilePanel(File[] files) {
-            clickAction(files);
+            clickAction(currentFileArray);
             filePanelScrollPane.setViewportView(stringList);
             this.add(filePanelScrollPane);
         }
 
+        /*public FilePanel(File[] files) {
+            clickAction(currentFileArray);
+            filePanelScrollPane.setViewportView(stringList);
+            this.add(filePanelScrollPane);
+        }*/
+
         public void clickAction(File[] files) {
-            //this.currentFileArray = files;
+            //currentFileArray = files;
+            if (currentFileArray == null) {
+                return;
+            }
             ArrayList<String> filesArray = getFilesArray(files);
-            String[] ffiles = filesArray.toArray(new String[filesArray.size()]);
+
+            //String[] ffiles = filesArray.toArray(new String[filesArray.size()]);
+
             String[] fileArrayPath = filePath.toArray(new String[filePath.size()]);
             stringList = new JList(filesArray.toArray());
+
+            //stringList.addListSelectionListener(new SharedListSelectionHandler());
 
                 stringList.addMouseListener(new MouseAdapter() {
                     public void mouseClicked(MouseEvent evt) {
@@ -235,10 +236,15 @@ public class MyFileManagerFrame extends JInternalFrame {
             }
 
 
-        public String getSizeAndDate2(File file) {
+        public String getSizeAndDate(File file) {
             String filex = "";
             SimpleDateFormat formatter = new SimpleDateFormat("MM/dd/yyyy");
             DecimalFormat dformat = new DecimalFormat("#,###");
+
+            if (file.isDirectory()) {
+
+                filex += "Directory: " + file.getName();
+            }
 
             if (file.isFile()) {
                 if (!showDetails) {
@@ -247,7 +253,7 @@ public class MyFileManagerFrame extends JInternalFrame {
                 else {
                     filex += file.getName() + " " + formatter.format(file.lastModified()) + " " + dformat.format(file.length());
                 }
-                model.addElement(filex);}
+            }
             return filex; }
 
 
@@ -258,7 +264,7 @@ public class MyFileManagerFrame extends JInternalFrame {
             for (File value : file) {
                 //files.add(value.getAbsolutePath());
                 filePath.add(value.getAbsolutePath());
-                files.add(getSizeAndDate2(value));
+                files.add(getSizeAndDate(value));
             }
             return files;
         }
@@ -272,9 +278,6 @@ public class MyFileManagerFrame extends JInternalFrame {
             }
             return files;
         }
-
-
-
 
     }
 

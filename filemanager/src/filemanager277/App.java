@@ -4,6 +4,8 @@ package filemanager277;
 import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.FocusEvent;
+import java.awt.event.FocusListener;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
@@ -25,14 +27,13 @@ class App extends JFrame {
     JToolBar toolBar, driveBar, statusBar;
     JDesktopPane desktop;
     MyFileManagerFrame myfm, myfm2;
-    //FileManagerFrame myf, myf2, myFrame;
     JButton toolDetails, toolSimple;
     String drive, freeSpace, usedSpace, totalSpace, currentDrive;
     File[] paths;
 
 
 
-    public App() throws IOException {
+    public App() {
         panel = new JPanel();
         topPanel = new JPanel();
         menuBar = new JMenuBar();
@@ -42,10 +43,7 @@ class App extends JFrame {
         desktop = new JDesktopPane();
 
         currentDrive = this.getDrives()[0];
-
         myfm = new MyFileManagerFrame();
-        //myFrame = new FileManagerFrame(this);
-
         panel.setLayout(new BorderLayout());
         topPanel.setLayout(new BorderLayout());
 
@@ -61,13 +59,11 @@ class App extends JFrame {
         buildstatusbar();
 
         desktop.add(myfm);
-        //desktop.add(myFrame);
         topPanel.add(menuBar, BorderLayout.NORTH);
         topPanel.add(toolBar, BorderLayout.CENTER);
         panel.add(topPanel, BorderLayout.NORTH);
         panel.add(desktop, BorderLayout.CENTER);
         panel.add(statusBar, BorderLayout.SOUTH);
-
         add(panel);
 
     }
@@ -139,6 +135,8 @@ class App extends JFrame {
                 myfm2 = new MyFileManagerFrame(s);
                 myfm2.drive = s;
                 desktop.add(myfm2);
+                /*MyFileManagerFrame active = (MyFileManagerFrame) desktop.getSelectedFrame();
+                desktop.add(new MyFileManagerFrame(s));*/
             }
         };
 
@@ -169,31 +167,26 @@ class App extends JFrame {
 
     private void buildstatusbar() {
         this.currentDrive = getDrives()[0];
-        JLabel size = new JLabel("Total Space in GB: ");
-        JLabel drive = new JLabel("Current Drive: " + currentDrive + "   ");
-        JLabel usedSpace = new JLabel("Used Space: ");
-        JLabel freeSpace = new JLabel("Free space: ");
-        statusBar.add(drive);
-        statusBar.add(freeSpace);
-        statusBar.add(usedSpace);
-        statusBar.add(size);
-    }
-
-    private void updateStatusbar() {
-
-    }
-
-    /*public void updateStatusBar(String currentDrive) {
         File file = new File(currentDrive);
+        long totalSpace = file.getTotalSpace();
+        long freeSpace = file.getFreeSpace();
+        long usedSpace = totalSpace - freeSpace;
 
-        drive.setText("Current Drive: " + currentDrive);
-        freeSpace.setText("Free Space: " + String.valueOf(file.getFreeSpace()/1073741824) + "GB");
-        usedSpace.setText("Used Space: " + String.valueOf(file.getTotalSpace() - file.getFreeSpace()/1073741824) + "GB");
-        totalSpace.setText("Total Space: " + String.valueOf(file.getFreeSpace()/1073741824) + "GB");
+        JLabel sizeLabel = new JLabel("Total Space in GB: " + totalSpace + "    ");
+        JLabel driveLabel = new JLabel("Current Drive: " + currentDrive + "   ");
+        JLabel usedSpaceLabel = new JLabel("Used Space: " + usedSpace + "    ");
+        JLabel freeSpaceLabel = new JLabel("Free space: " + freeSpace + "    ");
+        statusBar.add(driveLabel);
+        statusBar.add(freeSpaceLabel);
+        statusBar.add(usedSpaceLabel);
+        statusBar.add(sizeLabel);
+    }
 
+    private void updateStatusbar(String currentDrive) {
+        MyFileManagerFrame activeFrame = (MyFileManagerFrame) desktop.getSelectedFrame();
+        System.out.println(activeFrame.drive);
+    }
 
-
-    }*/
 
 
     private class ExitActionListener implements ActionListener {
@@ -228,21 +221,21 @@ class App extends JFrame {
         public void actionPerformed(ActionEvent e) {
 
             if (e.getActionCommand().equals("Details")) {
-                myfm.showDetails = true;
-                myfm.changeFilePanel(myfm.currentFileArray);
-                if (myfm2 != null) {
-                    myfm2.showDetails = true;
-                    myfm2.changeFilePanel(myfm.currentFileArray);
+                MyFileManagerFrame activeFrame = (MyFileManagerFrame) desktop.getSelectedFrame();
+
+                if (activeFrame.currentFileArray != null) {
+                    activeFrame.showDetails = true;
+                    activeFrame.changeFilePanel(myfm.currentFileArray);
                 }
 
             }
             if (e.getActionCommand().equals("Simple")) {
-                myfm.showDetails = false;
-                myfm.hideDetailsWhenClicked();
-                if (myfm2 != null) {
-                    myfm2.showDetails = false;
-                    myfm2.hideDetailsWhenClicked();
+                MyFileManagerFrame activeFrame = (MyFileManagerFrame) desktop.getSelectedFrame();
+                if (activeFrame.currentFileArray != null) {
+                    activeFrame.showDetails = false;
+                    activeFrame.hideDetailsWhenClicked();
                 }
+
             }
         }
     }
@@ -253,6 +246,19 @@ class App extends JFrame {
         public void actionPerformed(ActionEvent e) {
             MyFileManagerFrame newMFM = new MyFileManagerFrame();
             desktop.add(newMFM);
+        }
+    }
+
+    private class MyFocusListener implements FocusListener {
+
+        @Override
+        public void focusGained(FocusEvent e) {
+
+        }
+
+        @Override
+        public void focusLost(FocusEvent e) {
+
         }
     }
 
