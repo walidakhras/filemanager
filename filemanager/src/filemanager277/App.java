@@ -30,6 +30,7 @@ class App extends JFrame {
     JButton toolDetails, toolSimple;
     String drive, freeSpace, usedSpace, totalSpace, currentDrive;
     File[] paths;
+    MyFileManagerFrame active;
 
 
 
@@ -57,7 +58,6 @@ class App extends JFrame {
         buildMenu();
         buildtoolbar();
         buildstatusbar();
-
         desktop.add(myfm);
         topPanel.add(menuBar, BorderLayout.NORTH);
         topPanel.add(toolBar, BorderLayout.CENTER);
@@ -65,7 +65,11 @@ class App extends JFrame {
         panel.add(desktop, BorderLayout.CENTER);
         panel.add(statusBar, BorderLayout.SOUTH);
         add(panel);
-
+        while (true) {
+            if (active != null) {
+                updateStatusbar();
+            }
+        }
     }
 
     private void buildMenu() {
@@ -182,7 +186,7 @@ class App extends JFrame {
         statusBar.add(sizeLabel);
     }
 
-    private void updateStatusbar(String currentDrive) {
+    private void updateStatusbar() {
         MyFileManagerFrame activeFrame = (MyFileManagerFrame) desktop.getSelectedFrame();
         System.out.println(activeFrame.drive);
     }

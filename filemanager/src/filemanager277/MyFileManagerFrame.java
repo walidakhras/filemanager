@@ -116,7 +116,9 @@ public class MyFileManagerFrame extends JInternalFrame {
             rootFile = new File(drive);
             buildTree();
             dirPanelScrollPane.setViewportView(dirTree);
-            this.add(dirPanelScrollPane);
+            //this.add(dirPanelScrollPane);
+            this.setLayout(new BorderLayout());
+            this.add(dirPanelScrollPane, BorderLayout.CENTER);
         }
 
         private void buildTree() {
@@ -196,7 +198,9 @@ public class MyFileManagerFrame extends JInternalFrame {
         public FilePanel() {
             clickAction(currentFileArray);
             filePanelScrollPane.setViewportView(stringList);
-            this.add(filePanelScrollPane);
+            this.setLayout(new BorderLayout());
+            this.add(filePanelScrollPane, BorderLayout.CENTER);
+            //this.add(filePanelScrollPane);
         }
 
         /*public FilePanel(File[] files) {
@@ -227,6 +231,7 @@ public class MyFileManagerFrame extends JInternalFrame {
                             Desktop desktop = Desktop.getDesktop();
                             try {
                                 desktop.open(new File(fileArrayPath[index]));
+                                System.out.println(fileArrayPath[index]);
                             } catch (IOException ex) {
                                 System.out.println(ex.toString());
                             }
