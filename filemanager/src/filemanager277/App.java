@@ -22,6 +22,7 @@ import javax.swing.JComboBox;
 
 class App extends JFrame {
 
+    //initializing all the frames aggregated from JFrame
     JPanel panel, topPanel;
     JMenuBar menuBar;
     JToolBar toolBar, driveBar, statusBar;
@@ -33,8 +34,9 @@ class App extends JFrame {
 
 
 
+    //constructing all the frames
     public App() {
-        panel = new JPanel();
+        panel = new JPanel();   //opens the system panel but not file manager YET
         topPanel = new JPanel();
         menuBar = new JMenuBar();
         toolBar = new JToolBar();
