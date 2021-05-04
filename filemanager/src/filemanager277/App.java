@@ -1,37 +1,31 @@
 package filemanager277;
 
 //import filemanager.FilePanel.RenameListener;
-import java.awt.BorderLayout;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.FocusEvent;
-import java.awt.event.FocusListener;
+import java.awt.*;
+import java.awt.event.*;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Arrays;
-import javax.swing.JFrame;
-import javax.swing.JPanel;
-import javax.swing.JButton;
-import javax.swing.JMenuBar;
-import javax.swing.JMenu;
-import javax.swing.JMenuItem;
-import javax.swing.JToolBar;
-import javax.swing.JDesktopPane;
-import javax.swing.JLabel;
-import javax.swing.JComboBox;
+import javax.swing.*;
 
 class App extends JFrame {
 
-    //initializing all the frames aggregated from JFrame
+    public final long BYTE_TO_GB_CONVERSION = 1073741824;
     JPanel panel, topPanel;
     JMenuBar menuBar;
     JToolBar toolBar, driveBar, statusBar;
     JDesktopPane desktop;
-    MyFileManagerFrame myfm, myfm2;
-    JButton toolDetails, toolSimple;
-    String drive, freeSpace, usedSpace, totalSpace, currentDrive;
+    MyFileManagerFrame myfm;
+    String currentDrive;
     File[] paths;
-    MyFileManagerFrame active;
+    public App test = this;
+    JLabel sizeLabel = new JLabel();
+    JLabel driveLabel = new JLabel();
+    JLabel usedSpaceLabel = new JLabel();
+    JLabel freeSpaceLabel = new JLabel();
+    String copiedPath;
 
 
 
@@ -46,7 +40,7 @@ class App extends JFrame {
         desktop = new JDesktopPane();
 
         currentDrive = this.getDrives()[0];
-        myfm = new MyFileManagerFrame();
+        myfm = new MyFileManagerFrame(currentDrive, this);
         panel.setLayout(new BorderLayout());
         topPanel.setLayout(new BorderLayout());
 
@@ -59,7 +53,7 @@ class App extends JFrame {
     public void go() {
         buildMenu();
         buildtoolbar();
-        buildstatusbar();
+        buildstatusbar(currentDrive);
         desktop.add(myfm);
         topPanel.add(menuBar, BorderLayout.NORTH);
         topPanel.add(toolBar, BorderLayout.CENTER);
@@ -67,19 +61,9 @@ class App extends JFrame {
         panel.add(desktop, BorderLayout.CENTER);
         panel.add(statusBar, BorderLayout.SOUTH);
         add(panel);
-        while (true) {
-            if (active != null) {
-                updateStatusbar();
-            }
-        }
     }
 
     private void buildMenu() {
-
-        /*buildFileMenu();
-        buildTreeMenu();
-        buildWindowMenu();
-        buildHelpMenu();*/
 
         JMenu fileMenu, helpMenu, treeMenu, windowMenu;
         fileMenu = new JMenu("File");
@@ -105,6 +89,14 @@ class App extends JFrame {
         help.addActionListener(new HelpActionListener());
         exit.addActionListener(new ExitActionListener());
         New.addActionListener(new NewActionListener());
+        expandBranch.addActionListener(new ExpandCollapseActionListener());
+        collapseBranch.addActionListener(new ExpandCollapseActionListener());
+        rename.addActionListener(new MenuItemListener());
+        copy.addActionListener(new MenuItemListener());
+        delete.addActionListener(new MenuItemListener());
+        run.addActionListener(new MenuItemListener());
+        cascade.addActionListener(new CascadeActionListener());
+
 
         //Putting on Screen
         fileMenu.add(rename);
@@ -138,11 +130,9 @@ class App extends JFrame {
             public void actionPerformed(ActionEvent e) {
                 String s = (String) drivesSelect.getSelectedItem();
 
-                myfm2 = new MyFileManagerFrame(s);
+                MyFileManagerFrame myfm2 = new MyFileManagerFrame(s, test);
                 myfm2.drive = s;
                 desktop.add(myfm2);
-                /*MyFileManagerFrame active = (MyFileManagerFrame) desktop.getSelectedFrame();
-                desktop.add(new MyFileManagerFrame(s));*/
             }
         };
 
@@ -171,29 +161,181 @@ class App extends JFrame {
         return names;
     }
 
-    private void buildstatusbar() {
-        this.currentDrive = getDrives()[0];
-        File file = new File(currentDrive);
+    private void buildstatusbar(String drive) {
+        File file = new File(drive);
         long totalSpace = file.getTotalSpace();
         long freeSpace = file.getFreeSpace();
         long usedSpace = totalSpace - freeSpace;
 
-        JLabel sizeLabel = new JLabel("Total Space in GB: " + totalSpace + "    ");
-        JLabel driveLabel = new JLabel("Current Drive: " + currentDrive + "   ");
-        JLabel usedSpaceLabel = new JLabel("Used Space: " + usedSpace + "    ");
-        JLabel freeSpaceLabel = new JLabel("Free space: " + freeSpace + "    ");
+        sizeLabel.setText("Total Space: " + totalSpace/BYTE_TO_GB_CONVERSION + " GB    ");
+        driveLabel.setText("Current Drive: " + currentDrive + "   ");
+        usedSpaceLabel.setText("Used Space: " + usedSpace/BYTE_TO_GB_CONVERSION + " GB    ");
+        freeSpaceLabel.setText("Free space: " + freeSpace/BYTE_TO_GB_CONVERSION + " GB    ");
         statusBar.add(driveLabel);
         statusBar.add(freeSpaceLabel);
         statusBar.add(usedSpaceLabel);
         statusBar.add(sizeLabel);
     }
 
-    private void updateStatusbar() {
+    public void updateStatusBar() {
         MyFileManagerFrame activeFrame = (MyFileManagerFrame) desktop.getSelectedFrame();
-        System.out.println(activeFrame.drive);
+        this.currentDrive = activeFrame.drive;
+        buildstatusbar(currentDrive);
+        statusBar.repaint();
+        statusBar.revalidate();
+    }
+
+    public void renameOrCopy(RenameDLG renamedlg, String command) {
+        String tofield = "";
+        MyFileManagerFrame activeFrame = (MyFileManagerFrame) desktop.getSelectedFrame();
+        MyFileManagerFrame.FilePanel activeFP = activeFrame.filePanel;
+        File fileName = new File(activeFrame.getChosenFile());
+        String fileStringName = fileName.getName();
+        renamedlg.setFromField(fileStringName);
+
+        File testFile = new File(activeFrame.getChosenFile());
+        String directory = testFile.getParent();
+        renamedlg.setCurrentDirectory(directory);
+
+        File parentFile = new File(directory);
+
+        renamedlg.setVisible(true);
+        if (command.equals("Rename")) {
+            tofield += directory + "\\" + renamedlg.getToField();
+            activeFP.RenameChosenFile(tofield);
+        }
+        if (command.equals("Copy")) {
+
+            copiedPath = activeFrame.getDirPanelCurrentDirectory() + "\\" + renamedlg.getFromField();
+            renamedlg.copyFileDiffDirectory(directory);
+            tofield += renamedlg.getToField();
+            activeFP.CopyChosenFile(tofield);
+        }
+        activeFrame.setCurrentFileArray(parentFile.listFiles());
+        //activeFrame.currentFileArray = parentFile.listFiles();
+        activeFrame.changeFilePanel();
+    }
+
+    public void pasteFile(String fileToPaste) {
+        MyFileManagerFrame activeFrame = (MyFileManagerFrame) desktop.getSelectedFrame();
+
+        File from = new File(fileToPaste);
+        File to = new File(activeFrame.getDirPanelCurrentDirectory());
+
+        File testFile = new File(activeFrame.getChosenFile());
+        String directory = testFile.getParent();
+        File parentFile = new File(directory);
+
+        Path source = from.toPath();
+        Path dest = to.toPath();
+
+        try {
+            Files.copy(source, dest.resolve(source.getFileName()));
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+
+        activeFrame.setCurrentFileArray(parentFile.listFiles());
+        //activeFrame.currentFileArray = parentFile.listFiles();
+        activeFrame.changeFilePanel();
     }
 
 
+    public class popupmenu extends JPopupMenu {
+
+        JMenuItem popupRename = new JMenuItem("Rename");
+        JMenuItem popupCopy = new JMenuItem("Copy");
+        JMenuItem popupPaste = new JMenuItem("Paste");
+        JMenuItem popupDelete = new JMenuItem("Delete");
+
+        public popupmenu() {
+            popupRename.addActionListener(new MenuItemListener());
+            popupCopy.addActionListener(new MenuItemListener());
+            popupPaste.addActionListener(new PasteActionListener());
+            popupDelete.addActionListener(new MenuItemListener());
+            this.add(popupRename);
+            this.add(popupCopy);
+            this.add(popupPaste);
+            this.add(popupDelete);
+        }
+    }
+
+    private class MenuItemListener implements ActionListener {
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            if (e.getActionCommand().equals("Rename")) {
+                RenameDLG renamedlg = new RenameDLG(null, true);
+                renamedlg.setTitle("Rename");
+
+                renameOrCopy(renamedlg, "Rename");
+            }
+
+
+            if (e.getActionCommand().equals("Copy")) {
+                RenameDLG renamedlg = new RenameDLG(null, true);
+                renamedlg.setTitle("Copy");
+
+                renameOrCopy(renamedlg, "Copy");
+                System.out.println("Copied Path: " + copiedPath);
+
+            }
+            if (e.getActionCommand().equals("Run")) {
+                MyFileManagerFrame activeFrame = (MyFileManagerFrame) desktop.getSelectedFrame();
+
+                Desktop desktop = Desktop.getDesktop();
+                try {
+                    desktop.open(new File(activeFrame.getChosenFile()));
+
+                } catch (IOException ex) {
+                    System.out.println(ex.toString());
+                }
+            }
+            if (e.getActionCommand().equals("Delete")) {
+                MyFileManagerFrame activeFrame = (MyFileManagerFrame) desktop.getSelectedFrame();
+
+
+                int deleteChoice = JOptionPane.showConfirmDialog(null, "Are you sure you want to delete this File: " + activeFrame.getChosenFile(), "Deleting!", JOptionPane.YES_NO_OPTION);
+                if (deleteChoice == JOptionPane.YES_OPTION) {
+                    File deleteFile = new File(activeFrame.getChosenFile());
+                    boolean successfullyDeleted = deleteFile.delete();
+                    activeFrame.changeFilePanel();
+                }
+                else {
+                    System.out.println("Sike");
+                }
+            }
+        }
+    }
+
+    private class PasteActionListener implements ActionListener {
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            pasteFile(copiedPath);
+            System.out.println("Coped file: " + copiedPath);
+        }
+    }
+
+
+
+    private class ExpandCollapseActionListener implements ActionListener {
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            MyFileManagerFrame activeFrame = (MyFileManagerFrame) desktop.getSelectedFrame();
+            JTree tree = activeFrame.dirPanel.getDirTree();
+
+            int row = tree.getMinSelectionRow();
+
+            if (e.getActionCommand().equals("Expand Branch")) {
+                tree.expandRow(row);
+            }
+            if(e.getActionCommand().equals("Collapse Branch")) {
+                tree.collapseRow(row);
+            }
+        }
+    }
 
     private class ExitActionListener implements ActionListener {
 
@@ -229,15 +371,16 @@ class App extends JFrame {
             if (e.getActionCommand().equals("Details")) {
                 MyFileManagerFrame activeFrame = (MyFileManagerFrame) desktop.getSelectedFrame();
 
-                if (activeFrame.currentFileArray != null) {
+                //if (activeFrame.currentFileArray != null) {
+                if (activeFrame.getCurrentFileArray() != null) {
                     activeFrame.showDetails = true;
-                    activeFrame.changeFilePanel(myfm.currentFileArray);
+                    activeFrame.changeFilePanel();
                 }
 
             }
             if (e.getActionCommand().equals("Simple")) {
                 MyFileManagerFrame activeFrame = (MyFileManagerFrame) desktop.getSelectedFrame();
-                if (activeFrame.currentFileArray != null) {
+                if (activeFrame.getCurrentFileArray() != null) {
                     activeFrame.showDetails = false;
                     activeFrame.hideDetailsWhenClicked();
                 }
@@ -246,29 +389,26 @@ class App extends JFrame {
         }
     }
 
+    private class CascadeActionListener implements ActionListener {
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            int x = 40;
+            int y = 40;
+            JInternalFrame[] allFramesArray = desktop.getAllFrames();
+            for (int i = 0; i < allFramesArray.length; i++) {
+                allFramesArray[i].setLocation(x * i, y * i);
+            }
+        }
+    }
+
     private class NewActionListener implements ActionListener {
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            MyFileManagerFrame newMFM = new MyFileManagerFrame();
+            MyFileManagerFrame newMFM = new MyFileManagerFrame(getDrives()[0], test);
             desktop.add(newMFM);
         }
     }
-
-    private class MyFocusListener implements FocusListener {
-
-        @Override
-        public void focusGained(FocusEvent e) {
-
-        }
-
-        @Override
-        public void focusLost(FocusEvent e) {
-
-        }
-    }
-
-
-
 }
 

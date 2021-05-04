@@ -33,6 +33,8 @@ public class DirRead {
         return file.isDirectory();
     }*/
 
+
+
     public static void main(String[] args) {
 
 
@@ -51,6 +53,17 @@ public class DirRead {
         } catch (IOException ex){
             System.out.println(ex.toString());
         }*/
+
+        /*private void createfileNodes (DefaultMutableTreeNode rootNode, File directory) {
+            File[] filelist = directory.listFiles();
+            if (filelist == null) return;
+            if (directory.isDirectory()) {
+                for (File file : filelist) {
+                    if (file.isDirectory()) {
+                        MyFileNode node = new MyFileNode(file.getName(), file);
+                        DefaultMutableTreeNode treeNode = new DefaultMutableTreeNode(node);
+                        //showNextSubdirectory(treeNode, file);
+                        rootNode.add(treeNode); } } } }*/
 
         //Reading directories
         File file = new File("C:/shit");
