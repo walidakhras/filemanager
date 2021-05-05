@@ -34,8 +34,7 @@ public class MyFileManagerFrame extends JInternalFrame {
     private File[] currentFileArray;
     private String dirPanelCurrentDirectory;
     private String chosenFile;
-    private ArrayList<String> dirs = new ArrayList<String>();
-    public String cacaTest;
+
 
     public MyFileManagerFrame(String clickedDrive, App a) {
         this.test = a;
@@ -209,6 +208,7 @@ public class MyFileManagerFrame extends JInternalFrame {
                 currentFileArray = mfn.getFileList();
                 updateTitle(dirPanelCurrentDirectory);
                 changeFilePanel();
+                test.dirs.add(dirPanelCurrentDirectory);
             }
         }
 
@@ -298,9 +298,6 @@ public class MyFileManagerFrame extends JInternalFrame {
                             int index = stringList.locationToIndex(evt.getPoint());
                             chosenFile = fileArrayPath[index];
                             File testFile = new File(chosenFile);
-                            cacaTest = testFile.getParent();
-                            System.out.println(cacaTest);
-                            dirs.add(cacaTest);
                         }
                         if (evt.getClickCount() == 2) {
                             int index = stringList.locationToIndex(evt.getPoint());
@@ -329,15 +326,15 @@ public class MyFileManagerFrame extends JInternalFrame {
 
             if (file.isDirectory()) {
 
-                filex += file.getAbsolutePath();
+                filex += file.getName();
             }
 
             if (file.isFile()) {
                 if (!showDetails) {
-                    filex += file.getAbsolutePath() + " ";
+                    filex += file.getName() + " ";
                 }
                 else {
-                    filex += file.getAbsolutePath() + "            " + "Date Last Modified: " + " " + formatter.format(file.lastModified()) + " " + "Size: " + " " + dformat.format(file.length());
+                    filex += file.getName() + "            " + "Date Last Modified: " + " " + formatter.format(file.lastModified()) + " " + "Size: " + " " + dformat.format(file.length());
                 }
             }
             return filex; }
@@ -403,10 +400,10 @@ public class MyFileManagerFrame extends JInternalFrame {
 
                         String[] next = temp.split("\\n");
                         String InternalDnDFileString = "";
+                        System.out.println(test.dirs);
 
 
                         for (String s : next) {
-                            System.out.println("Dirs: " + dirs);
                             File curFile = new File(s);
 
                             if (curFile.isDirectory()) {
@@ -416,6 +413,8 @@ public class MyFileManagerFrame extends JInternalFrame {
                             else {
                                 InternalDnDFileString = getFileExtension(s);
                             }
+                            InternalDnDFileString = test.dirs.get(test.dirs.size() - 1) + "\\" + InternalDnDFileString;
+                            System.out.println(InternalDnDFileString);
 
 
                             File from = new File(InternalDnDFileString);

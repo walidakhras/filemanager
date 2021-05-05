@@ -7,6 +7,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Arrays;
 import javax.swing.*;
 
@@ -26,7 +27,7 @@ class App extends JFrame {
     JLabel usedSpaceLabel = new JLabel();
     JLabel freeSpaceLabel = new JLabel();
     String copiedPath;
-
+    ArrayList<String> dirs = new ArrayList<String>();
 
 
     public App() {
@@ -178,6 +179,7 @@ class App extends JFrame {
 
     public void updateStatusBar() {
         MyFileManagerFrame activeFrame = (MyFileManagerFrame) desktop.getSelectedFrame();
+        dirs.add(activeFrame.getDirPanelCurrentDirectory());
         this.currentDrive = activeFrame.drive;
         buildstatusbar(currentDrive);
         statusBar.repaint();
@@ -389,8 +391,8 @@ class App extends JFrame {
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            int x = 40;
-            int y = 40;
+            int x = 30;
+            int y = 30;
             JInternalFrame[] allFramesArray = desktop.getAllFrames();
             for (int i = 0; i < allFramesArray.length; i++) {
                 allFramesArray[i].setLocation(x * i, y * i);
