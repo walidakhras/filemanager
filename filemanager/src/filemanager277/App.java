@@ -211,7 +211,6 @@ class App extends JFrame {
             activeFP.CopyChosenFile(tofield);
         }
         activeFrame.setCurrentFileArray(parentFile.listFiles());
-        //activeFrame.currentFileArray = parentFile.listFiles();
         activeFrame.changeFilePanel();
     }
 
@@ -235,7 +234,6 @@ class App extends JFrame {
         }
 
         activeFrame.setCurrentFileArray(parentFile.listFiles());
-        //activeFrame.currentFileArray = parentFile.listFiles();
         activeFrame.changeFilePanel();
     }
 
@@ -370,7 +368,6 @@ class App extends JFrame {
             if (e.getActionCommand().equals("Details")) {
                 MyFileManagerFrame activeFrame = (MyFileManagerFrame) desktop.getSelectedFrame();
 
-                //if (activeFrame.currentFileArray != null) {
                 if (activeFrame.getCurrentFileArray() != null) {
                     activeFrame.showDetails = true;
                     activeFrame.changeFilePanel();
