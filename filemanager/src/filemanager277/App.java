@@ -151,14 +151,17 @@ class App extends JFrame {
 
     }
 
+    //returns the drives of the computer (like C:)
     public String[] getDrives() {
         paths = File.listRoots();
         String[] names = new String[paths.length];
+        
+
 
         for (int i = 0; i < paths.length; i++) {
             names[i] = paths[i].getPath();
         }
-
+        
         return names;
     }
 
