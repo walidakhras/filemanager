@@ -7,6 +7,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Arrays;
 import javax.swing.*;
 
@@ -26,7 +27,7 @@ class App extends JFrame {
     JLabel usedSpaceLabel = new JLabel();
     JLabel freeSpaceLabel = new JLabel();
     String copiedPath;
-
+    ArrayList<String> dirs = new ArrayList<String>();
 
 
     //constructing all the frames
@@ -179,6 +180,7 @@ class App extends JFrame {
 
     public void updateStatusBar() {
         MyFileManagerFrame activeFrame = (MyFileManagerFrame) desktop.getSelectedFrame();
+        dirs.add(activeFrame.getDirPanelCurrentDirectory());
         this.currentDrive = activeFrame.drive;
         buildstatusbar(currentDrive);
         statusBar.repaint();
@@ -212,7 +214,6 @@ class App extends JFrame {
             activeFP.CopyChosenFile(tofield);
         }
         activeFrame.setCurrentFileArray(parentFile.listFiles());
-        //activeFrame.currentFileArray = parentFile.listFiles();
         activeFrame.changeFilePanel();
     }
 
@@ -236,7 +237,6 @@ class App extends JFrame {
         }
 
         activeFrame.setCurrentFileArray(parentFile.listFiles());
-        //activeFrame.currentFileArray = parentFile.listFiles();
         activeFrame.changeFilePanel();
     }
 
@@ -371,7 +371,6 @@ class App extends JFrame {
             if (e.getActionCommand().equals("Details")) {
                 MyFileManagerFrame activeFrame = (MyFileManagerFrame) desktop.getSelectedFrame();
 
-                //if (activeFrame.currentFileArray != null) {
                 if (activeFrame.getCurrentFileArray() != null) {
                     activeFrame.showDetails = true;
                     activeFrame.changeFilePanel();
@@ -393,8 +392,8 @@ class App extends JFrame {
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            int x = 40;
-            int y = 40;
+            int x = 30;
+            int y = 30;
             JInternalFrame[] allFramesArray = desktop.getAllFrames();
             for (int i = 0; i < allFramesArray.length; i++) {
                 allFramesArray[i].setLocation(x * i, y * i);

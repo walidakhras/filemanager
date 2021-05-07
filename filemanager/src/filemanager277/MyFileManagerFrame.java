@@ -2,10 +2,7 @@ package filemanager277;
 
 import javax.swing.*;
 import javax.swing.event.*;
-import javax.swing.tree.DefaultMutableTreeNode;
-import javax.swing.tree.DefaultTreeModel;
-import javax.swing.tree.ExpandVetoException;
-import javax.swing.tree.TreePath;
+import javax.swing.tree.*;
 import java.awt.*;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.dnd.DnDConstants;
@@ -25,6 +22,7 @@ import java.util.*;
 import java.util.List;
 
 
+
 public class MyFileManagerFrame extends JInternalFrame {
 
     JSplitPane splitPane;
@@ -36,6 +34,7 @@ public class MyFileManagerFrame extends JInternalFrame {
     private File[] currentFileArray;
     private String dirPanelCurrentDirectory;
     private String chosenFile;
+
 
     public MyFileManagerFrame(String clickedDrive, App a) {
         this.test = a;
@@ -157,6 +156,8 @@ public class MyFileManagerFrame extends JInternalFrame {
             dirPanelScrollPane.setViewportView(dirTree);
             this.setLayout(new BorderLayout());
             this.add(dirPanelScrollPane, BorderLayout.CENTER);
+            DefaultTreeCellRenderer renderer = (DefaultTreeCellRenderer) dirTree.getCellRenderer();
+            renderer.setLeafIcon(renderer.getClosedIcon());
         }
 
         private void buildTree() {
@@ -170,7 +171,7 @@ public class MyFileManagerFrame extends JInternalFrame {
         }
 
 
-        private void createNodes(DefaultMutableTreeNode n, File dir) {
+        private void createNodes(DefaultMutableTreeNode node, File dir) {
 
             File[] files = dir.listFiles();
             if (files == null) return;
@@ -178,12 +179,12 @@ public class MyFileManagerFrame extends JInternalFrame {
                 if (file.isDirectory() && !(file.isHidden())) {
                     MyFileNode mfn = new MyFileNode(file.getName(), file);
                     DefaultMutableTreeNode test = new DefaultMutableTreeNode(mfn);
-                    n.add(test);
+                    node.add(test);
                 } }
         }
 
-        private void showSubdirectories(DefaultMutableTreeNode n, File dir) {
-            n.removeAllChildren();
+        private void showSubdirectories(DefaultMutableTreeNode node, File dir) {
+            node.removeAllChildren();
 
             File[] files = dir.listFiles();
             if (files == null) return;
@@ -191,7 +192,7 @@ public class MyFileManagerFrame extends JInternalFrame {
                 if (file.isDirectory() && !(file.isHidden())) {
                     MyFileNode mfn = new MyFileNode(file.getName(), file);
                     DefaultMutableTreeNode test = new DefaultMutableTreeNode(mfn);
-                    n.add(test);
+                    node.add(test);
                     createNodes(test, mfn.getFile());
 
                     } }
@@ -203,12 +204,11 @@ public class MyFileManagerFrame extends JInternalFrame {
                 DefaultMutableTreeNode node = (DefaultMutableTreeNode) dirTree.getLastSelectedPathComponent();
                 if (node == null) return;
                 MyFileNode mfn = (MyFileNode) node.getUserObject();
-                File f = mfn.getFile();
-                //showSubdirectories(node, f);
                 dirPanelCurrentDirectory = mfn.mfngetAbsolutePath();
                 currentFileArray = mfn.getFileList();
                 updateTitle(dirPanelCurrentDirectory);
                 changeFilePanel();
+                test.dirs.add(dirPanelCurrentDirectory);
             }
         }
 
@@ -248,7 +248,7 @@ public class MyFileManagerFrame extends JInternalFrame {
         public FilePanel() {
             this.setDropTarget(new MyDropTarget());
             clickAction(currentFileArray);
-            System.out.println(Arrays.toString(currentFileArray));
+            //System.out.println(Arrays.toString(currentFileArray));
             filePanelScrollPane.setViewportView(stringList);
             this.setLayout(new BorderLayout());
             this.add(filePanelScrollPane, BorderLayout.CENTER);
@@ -297,13 +297,13 @@ public class MyFileManagerFrame extends JInternalFrame {
                         if (evt.getClickCount() == 1) {
                             int index = stringList.locationToIndex(evt.getPoint());
                             chosenFile = fileArrayPath[index];
+                            File testFile = new File(chosenFile);
                         }
                         if (evt.getClickCount() == 2) {
                             int index = stringList.locationToIndex(evt.getPoint());
                             Desktop desktop = Desktop.getDesktop();
                             try {
                                 desktop.open(new File(fileArrayPath[index]));
-                                System.out.println(fileArrayPath[index]);
                             } catch (IOException ex) {
                                 System.out.println(ex.toString());
                             }
@@ -326,15 +326,15 @@ public class MyFileManagerFrame extends JInternalFrame {
 
             if (file.isDirectory()) {
 
-                filex += file.getAbsolutePath();
+                filex += file.getName();
             }
 
             if (file.isFile()) {
                 if (!showDetails) {
-                    filex += file.getAbsolutePath() + " ";
+                    filex += file.getName() + " ";
                 }
                 else {
-                    filex += file.getAbsolutePath() + " >      " + "Date Last Modified: " + " " + formatter.format(file.lastModified()) + " " + "Size: " + " " + dformat.format(file.length());
+                    filex += file.getName() + "            " + "Date Last Modified: " + " " + formatter.format(file.lastModified()) + " " + "Size: " + " " + dformat.format(file.length());
                 }
             }
             return filex; }
@@ -369,6 +369,23 @@ public class MyFileManagerFrame extends JInternalFrame {
             return files;
         }
 
+        public String getFileExtension(String s) {
+            int index = s.lastIndexOf('.');
+            String extension = s.substring(index + 1);
+            String otherExtension = "";
+
+            for (int i = 0; i < extension.length(); i++) {
+                if (extension.charAt(i) == ' ') {
+                    break;
+                }
+                else {
+                    otherExtension += extension.charAt(i);
+                }
+            }
+            String restOfString = s.substring(0, index);
+            return restOfString + "." + otherExtension;
+        }
+
 
 
 
@@ -377,38 +394,34 @@ public class MyFileManagerFrame extends JInternalFrame {
                 try {
                     evt.acceptDrop(DnDConstants.ACTION_COPY);
                     List result = new ArrayList();
-
                     if(evt.getTransferable().isDataFlavorSupported(DataFlavor.stringFlavor)) {
                         String temp = (String)evt.getTransferable().getTransferData(DataFlavor.stringFlavor);
 
 
                         String[] next = temp.split("\\n");
                         String InternalDnDFileString = "";
+                        System.out.println(test.dirs);
 
 
                         for (String s : next) {
                             File curFile = new File(s);
-                            System.out.println(curFile.getAbsolutePath());
+
                             if (curFile.isDirectory()) {
                                 InternalDnDFileString = curFile.getAbsolutePath();
                             }
+
                             else {
-                                for (int i = 0; i < s.length(); i++) {
-                                    if (s.charAt(i) == '>') {
-                                        break;
-                                    }
-                                    else {
-                                        InternalDnDFileString += s.charAt(i);
-                                    }
-                                }
-                                InternalDnDFileString = InternalDnDFileString.substring(0,InternalDnDFileString.length() - 1);
+                                InternalDnDFileString = getFileExtension(s);
                             }
+                            InternalDnDFileString = test.dirs.get(test.dirs.size() - 1) + "\\" + InternalDnDFileString;
+                            System.out.println(InternalDnDFileString);
 
 
                             File from = new File(InternalDnDFileString);
                             if (currentDirectory == null) {
                                 currentDirectory = dirPanelCurrentDirectory;
                             }
+
                             File to = new File(currentDirectory);
 
                             Path source = from.toPath();
@@ -423,15 +436,12 @@ public class MyFileManagerFrame extends JInternalFrame {
                         File shitgay = new File(currentDirectory);
                         currentFileArray = shitgay.listFiles();
                         changeFilePanel();
-
                     }
 
 
                     else {
                         result = (List)evt.getTransferable().getTransferData(DataFlavor.javaFileListFlavor);
                         for(Object o : result) {
-                            System.out.println(o.toString());
-                            System.out.println(currentDirectory);
 
                             File from = new File(o.toString());
                             File to = new File(currentDirectory);
@@ -445,9 +455,8 @@ public class MyFileManagerFrame extends JInternalFrame {
                                 ex.printStackTrace();
                             }
                         }
-                        File shitgay = new File(currentDirectory);
-                        currentFileArray = shitgay.listFiles();
-                        System.out.println(Arrays.toString(currentFileArray));
+                        File updatedArr = new File(currentDirectory);
+                        currentFileArray = updatedArr.listFiles();
                         changeFilePanel();
                     }
 
