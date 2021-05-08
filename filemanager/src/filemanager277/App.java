@@ -397,6 +397,7 @@ class App extends JFrame {
         public void actionPerformed(ActionEvent e) {
             int x = 30;
             int y = 30;
+            //MyFileManagerFrame[] allFramesArray = (MyFileManagerFrame[]) desktop.getAllFrames();
             JInternalFrame[] allFramesArray = desktop.getAllFrames();
             for (int i = 0; i < allFramesArray.length; i++) {
                 allFramesArray[i].setLocation(x * i, y * i);
@@ -413,4 +414,3 @@ class App extends JFrame {
         }
     }
 }
-
